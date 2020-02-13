@@ -1,4 +1,5 @@
 const MongoClient = require("mongodb").MongoClient;
+const ObjectId = require("mongodb").ObjectId;
 
 const express = require("express");
 
@@ -24,8 +25,9 @@ client.connect(err => {
   collection = db.collection(collectionName);
 });
 
-api.get("/api/peliculas", function(request, response) {
-  collection.find().toArray((err, result) => {
+api.get("/api/peliculas/:id?", function(request, response) {
+  const id = request.params.id;
+  collection.find({ _id: ObjectId(id) }).toArray((err, result) => {
     if (err) throw err;
     response.json({ result });
   });

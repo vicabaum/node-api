@@ -1,5 +1,6 @@
 const MongoClient = require("mongodb").MongoClient;
 const ObjectId = require("mongodb").ObjectId;
+const isEmpty = require("lodash.isempty");
 
 const express = require("express");
 
@@ -25,17 +26,20 @@ client.connect(err => {
   collection = db.collection(collectionName);
 });
 
-api.get("/api/peliculas/:id?", function(request, response) {
-  const id = request.params.id;
-  collection.find({ _id: ObjectId(id) }).toArray((err, result) => {
+api.get("/api/peliculas/:id?", ({ params: { id: _id } }, response) => {
+  let query = {};
+
+  if (!isEmpty(_id)) {
+    query = { ...query, _id: ObjectId(_id) };
+  }
+
+  collection.find(query).toArray((err, result) => {
     if (err) throw err;
     response.json({ result });
   });
 });
 
-api.post("/api/peliculas", function(request, response) {
-  let pelicula = request.body;
-
+api.post("/api/peliculas", ({ body: pelicula }, response) => {
   collection.insertOne(pelicula, (err, result) => {
     if (err) throw err;
 
@@ -46,33 +50,12 @@ api.post("/api/peliculas", function(request, response) {
   });
 });
 
-// api.put("/api/peliculas/:id?", function(request, response) {
-//   let elID = request.params.id;
-
-//   if (!elID) {
-//     response.json({ rta: "error", message: "ID no especificado" });
-//   } else {
-//     let datos = request.body;
-
-//     peliculas.put(elID, datos, function(error, value) {
-//       let rta = error
-//         ? { rta: "error", error }
-//         : { rta: "ok", message: "Pelicula actualizada", id: elID };
-
-//       response.json(rta);
-//     });
-//   }
-// });
-
-// api.delete("/api/peliculas/:id", function(request, response) {
-//   let elID = request.params.id;
-
-//   peliculas.delete(elID, function(error) {
-//     response.json({ rta: "error", error });
-//   });
-
-//   response.json({ rta: "ok", message: "Pelicula borrada", id: elID });
-// });
+api.delete("/api/peliculas/:id", ({ params: { id: _id } }, response) => {
+  collection.findOneAndDelete({ _id: ObjectId(_id) }, (err, result) => {
+    if (err) throw err;
+    response.json(result);
+  });
+});
 
 const port = 8080;
 
